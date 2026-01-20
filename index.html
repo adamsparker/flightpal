@@ -2,19 +2,31 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FlightPal - Ultimate Focus</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
+    <title>FlightPal - Ultimate Focus Timer & Productivity Tool</title>
+    <meta name="description" content="Gamify your focus sessions with FlightPal. Simulate real-time flights while you work, study, or create. The ultimate productivity companion.">
+    <meta name="keywords" content="focus timer, productivity tool, pomodoro, study timer, flight simulator, deep work, gamification">
+    <meta name="author" content="FlightPal">
+    <meta name="theme-color" content="#000000">
+    <link rel="canonical" href="https://flightpal.app">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://flightpal.app/">
+    <meta property="og:title" content="FlightPal - Ultimate Focus">
+    <meta property="og:description" content="Turn your work sessions into a journey. Fly to new destinations while you focus.">
+    <meta property="og:image" content="https://flightpal.app/og-image.jpg">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="FlightPal - Ultimate Focus">
+    <meta property="twitter:description" content="Turn your work sessions into a journey. Fly to new destinations while you focus.">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
-    <!-- Mapbox GL JS -->
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/interact.js/1.10.11/interact.min.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/interact.js/1.10.11/interact.min.js" defer></script>
 
     <style>
         :root {
@@ -27,12 +39,15 @@
             --radius-pill: 999px;
             --radius-card: 16px;
             --font-mono: 'Space Mono', monospace;
+            --font-sans: 'Inter', sans-serif;
+            --ease-elastic: cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
+        /* Reset & Base */
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
-
+        
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: var(--font-sans);
             background-color: var(--bg-color);
             color: var(--text-main);
             height: 100vh;
@@ -43,7 +58,7 @@
             align-items: center;
         }
 
-        /* --- Global Layout --- */
+        /* Layout & Containers */
         #app-frame {
             width: 100%;
             height: 100%;
@@ -56,13 +71,13 @@
             inset: 0;
             display: none;
             flex-direction: column;
-            padding: 20px;
+            /* padding: 20px; */
+            height: 100vh;
             background: #000;
             z-index: 10;
             opacity: 0;
-            transition: opacity 0.5s ease;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+            transition: opacity 0.4s ease;
+            overflow: hidden;
         }
 
         .screen.active {
@@ -71,46 +86,35 @@
             z-index: 20;
         }
 
-        /* Center container for non-fullscreen steps */
         .center-content {
             max-width: 500px;
             width: 100%;
             margin: 0 auto;
-            min-height: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
         }
 
-        /* Content wrapper for scrollable content */
         .content-wrapper {
             flex: 1;
             display: flex;
             flex-direction: column;
             min-height: 0;
+            position: relative;
         }
 
         .scrollable-content {
             flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding-bottom: 10px;
+            padding-bottom: 20px;
             padding-right: 5px;
         }
 
-        /* Custom scrollbar */
-        .scrollable-content::-webkit-scrollbar {
-            width: 4px;
-        }
-        
-        .scrollable-content::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 2px;
-        }
-        
-        .scrollable-content::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-        }
+        /* Scrollbar */
+        .scrollable-content::-webkit-scrollbar { width: 4px; }
+        .scrollable-content::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 2px; }
+        .scrollable-content::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 2px; }
 
         /* Typography */
         h1 { 
@@ -118,18 +122,20 @@
             font-weight: 800; 
             text-align: center; 
             letter-spacing: -1px; 
-            margin-bottom: 8px; 
-            margin-top: 10px;
+            margin: 10px 0 8px 0; 
         }
         
         p.subtitle { 
             color: var(--text-muted); 
             text-align: center; 
             margin-bottom: 1.5rem; 
-            font-size: clamp(0.9rem, 3vw, 1rem);
+            font-size: clamp(0.9rem, 3vw, 1rem); 
+            line-height: 1.4;
         }
 
-        /* Buttons */
+        /* UI Elements: Buttons */
+        button { font-family: inherit; }
+        
         .btn-primary {
             background: #fff;
             color: #000;
@@ -144,8 +150,10 @@
             margin-bottom: 15px;
             box-shadow: 0 0 30px rgba(255, 255, 255, 0.15);
             transition: transform 0.2s, box-shadow 0.2s;
+            will-change: transform;
         }
         .btn-primary:active { transform: scale(0.96); }
+        .btn-primary:hover { box-shadow: 0 0 40px rgba(255, 255, 255, 0.25); }
 
         .btn-secondary {
             background: rgba(255, 255, 255, 0.1);
@@ -158,16 +166,51 @@
             cursor: pointer;
             width: 100%;
             margin-top: 10px;
-            transition: all 0.2s;
+            transition: transform 0.2s, background 0.2s;
         }
         .btn-secondary:active { transform: scale(0.98); }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.15); }
 
-        /* --- Step 1: Scenario Pills --- */
+        .btn-icon-only {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-icon-only:hover { background: rgba(255,255,255,0.2); }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: background 0.2s;
+        }
+        .back-button:hover { background: rgba(255,255,255,0.2); }
+
+        /* Step 1: Scenario Pills */
         .scenario-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 10px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
+            margin-top: 10px;
         }
         
         .pill {
@@ -176,103 +219,74 @@
             padding: 14px 16px;
             border-radius: var(--radius-card);
             cursor: pointer;
-            transition: 0.3s;
+            transition: all 0.3s;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 8px;
             text-align: center;
         }
-        
         .pill i { font-size: 1.5rem; }
-        
         .pill:hover { background: rgba(255,255,255,0.1); }
-        
         .pill.selected { 
             background: #fff; 
             color: #000; 
             border-color: #fff; 
             box-shadow: 0 0 20px rgba(255,255,255,0.3);
+            transform: translateY(-2px);
         }
 
-        /* Duration Card on Flight Path Screen */
-        .duration-card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-card);
-            padding: 20px;
-            margin-top: 12px;
-            margin-bottom: 12px;
- 
+        /* Passport Styles */
+        .passport-header-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
         }
         
-        .duration-header {
+        .passport-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+            padding: 10px;
+        }
+
+        .stamp-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .duration-label {
-            color: var(--text-main);
-            font-weight: 600;
-            font-size: 1rem;
-        }
-        
-        .duration-value {
-            font-family: var(--font-mono);
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #fff;
-        }
-        
-        .duration-slider {
-            width: 100%;
-            accent-color: white;
-            height: 6px;
-            margin: 15px 0;
-        }
-        
-        .duration-presets {
-            display: flex;
-            gap: 8px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .duration-preset {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--glass-border);
-            padding: 8px 16px;
-            border-radius: var(--radius-pill);
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            flex: 1;
             text-align: center;
-            min-width: 70px;
+            transition: transform 0.2s;
         }
-        
-        .duration-preset:hover {
-            background: rgba(255,255,255,0.1);
+        .stamp-card::before {
+            content: '';
+            position: absolute;
+            top: -50px; left: -50px;
+            width: 100px; height: 100px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 50%;
+            pointer-events: none;
         }
-        
-        .duration-preset.active {
-            background: #fff;
-            color: #000;
-            border-color: #fff;
-        }
+        .stamp-card:hover { transform: translateY(-3px); border-color: #555; }
+        .stamp-date { font-family: var(--font-mono); font-size: 0.7rem; color: #666; margin-bottom: 8px; }
+        .stamp-route { font-weight: 800; font-size: 1.2rem; color: #fff; margin-bottom: 4px; }
+        .stamp-scenario { font-size: 0.75rem; color: #aaa; background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 4px; }
+        .stamp-icon { position: absolute; bottom: -10px; right: -10px; font-size: 4rem; color: rgba(255,255,255,0.03); transform: rotate(-15deg); }
+        .empty-state { text-align: center; padding: 40px 20px; color: #555; }
 
-        /* Path selection screen */
-        .path-screen {
-            padding: 0;
-        }
-
+        /* Step 2: Flight Path & Duration */
         .path-grid {
             display: flex;
             flex-direction: column;
             gap: 12px;
-            margin-top: 15px;
+            margin-top: 10px;
+            margin-bottom: 20px;
         }
         
         .path-option {
@@ -289,44 +303,22 @@
         .path-option::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
+            top: 0; left: 0; right: 0; height: 2px;
             background: linear-gradient(90deg, transparent, #fff, transparent);
             transform: translateX(-100%);
             transition: transform 0.5s;
         }
-        
-        .path-option:hover::before {
-            transform: translateX(100%);
-        }
-        
-        .path-option:hover {
-            background: rgba(255,255,255,0.1);
-            transform: translateY(-2px);
-        }
-        
+        .path-option:hover::before { transform: translateX(100%); }
+        .path-option:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
         .path-option.selected {
             background: #fff;
             color: #000;
             border-color: #fff;
             box-shadow: 0 0 30px rgba(255,255,255,0.3);
         }
-        
-        .path-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        
-        .path-codes {
-            font-family: var(--font-mono);
-            font-size: clamp(1.2rem, 4vw, 1.4rem);
-            font-weight: 800;
-        }
-        
+
+        .path-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .path-codes { font-family: var(--font-mono); font-size: clamp(1.2rem, 4vw, 1.4rem); font-weight: 800; }
         .path-distance {
             font-size: 0.85rem;
             color: var(--text-muted);
@@ -334,29 +326,48 @@
             padding: 4px 10px;
             border-radius: 12px;
         }
+        .path-option.selected .path-distance { background: rgba(0,0,0,0.1); color: #444; }
         
-        .path-names {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 8px;
-        }
-        
-        .path-duration {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 5px;
-            text-align: center;
-            font-family: var(--font-mono);
-        }
-        
-        .path-option.selected .path-distance {
-            background: rgba(0,0,0,0.1);
-            color: #666;
-        }
+        .path-names { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; }
+        .path-option.selected .path-names { color: #555; }
+        .path-duration { font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; text-align: center; font-family: var(--font-mono); }
+        .path-option.selected .path-duration { color: #555; }
 
-        /* --- Step 2: Custom Seat Picker (Fuselage) --- */
+        .duration-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-card);
+            padding: 20px;
+            margin: 12px 0;
+        }
+        .duration-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .duration-value { font-family: var(--font-mono); font-size: 1.5rem; font-weight: 700; color: #fff; }
+        
+        .duration-slider {
+            width: 100%;
+            accent-color: white;
+            height: 6px;
+            margin: 15px 0;
+            cursor: pointer;
+        }
+        
+        .duration-presets { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
+        .duration-preset {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            padding: 8px 16px;
+            border-radius: var(--radius-pill);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            text-align: center;
+            min-width: 60px;
+        }
+        .duration-preset:hover { background: rgba(255,255,255,0.1); }
+        .duration-preset.active { background: #fff; color: #000; border-color: #fff; }
+
+        /* Step 3: Seat Picker */
         .fuselage {
             background: #111;
             border: 1px solid #333;
@@ -364,23 +375,15 @@
             padding: clamp(50px, 12vw, 60px) 15px 30px 15px;
             width: 100%;
             max-width: 340px;
-            margin: 0 auto;
+            margin: 20px auto 0;
             position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
             box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
-            margin-top: 20px;
         }
 
-        /* Cockpit Windows */
-        .cockpit-windows {
-            position: absolute;
-            top: 20px;
-            display: flex;
-            gap: clamp(8px, 2vw, 10px);
-        }
-        
+        .cockpit-windows { position: absolute; top: 20px; display: flex; gap: 10px; }
         .window { 
             width: clamp(40px, 10vw, 50px); 
             height: clamp(20px, 5vw, 25px); 
@@ -392,19 +395,13 @@
         .seat-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr) 40px repeat(2, 1fr);
-            gap: clamp(8px, 2vw, 10px);
+            gap: 10px;
             width: 100%;
+            margin-top: 30px;
         }
 
-        .aisle-label {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #444;
-            font-size: 0.8rem;
-            font-family: var(--font-mono);
-        }
-
+        .aisle-label { display: flex; align-items: center; justify-content: center; color: #444; font-size: 0.8rem; font-family: var(--font-mono); }
+        
         .seat {
             height: clamp(40px, 10vw, 45px);
             background: #2a2a2a;
@@ -414,34 +411,15 @@
             transition: all 0.2s;
             position: relative;
         }
-        
         .seat::after {
-            content: ''; 
-            position: absolute; 
-            bottom: -5px; 
-            left: 10%; 
-            width: 80%; 
-            height: 5px; 
-            background: #222; 
-            border-radius: 4px;
+            content: ''; position: absolute; bottom: -5px; left: 10%; width: 80%; height: 5px; 
+            background: #222; border-radius: 4px;
         }
-        
-        .seat:hover { border-color: #666; }
-        
-        .seat.taken { 
-            background: #151515; 
-            opacity: 0.5; 
-            cursor: not-allowed; 
-            border: none; 
-        }
-        
-        .seat.selected { 
-            background: #fff; 
-            border-color: #fff; 
-            box-shadow: 0 0 15px rgba(255,255,255,0.5);
-        }
+        .seat:hover:not(.taken) { border-color: #666; }
+        .seat.taken { background: #151515; opacity: 0.5; cursor: not-allowed; border: none; }
+        .seat.selected { background: #fff; border-color: #fff; box-shadow: 0 0 15px rgba(255,255,255,0.5); }
 
-        /* --- Step 3: Tearable Ticket --- */
+        /* Step 4: Boarding Pass */
         .ticket-wrapper {
             display: flex;
             width: 100%;
@@ -450,7 +428,7 @@
             filter: drop-shadow(0 10px 30px rgba(0,0,0,0.5));
             position: relative;
         }
-
+        
         .ticket-main {
             flex: 2;
             background: #fff;
@@ -460,7 +438,7 @@
             position: relative;
             z-index: 2;
         }
-
+        
         .ticket-stub {
             flex: 1;
             background: #f0f0f0;
@@ -478,1463 +456,1000 @@
             z-index: 2;
             transition: transform 0.1s;
         }
-
         .ticket-stub:active { cursor: grabbing; }
-
         .ticket-stub::after {
-            content: 'DRAG >>';
-            position: absolute;
-            bottom: 10px;
-            font-size: 0.6rem;
-            color: #888;
-            font-weight: 700;
-            letter-spacing: 1px;
-            animation: pulse 1.5s infinite;
+            content: 'DRAG >>'; position: absolute; bottom: 10px; font-size: 0.6rem; color: #888; 
+            font-weight: 700; letter-spacing: 1px; animation: pulse 1.5s infinite;
         }
 
-        /* Ticket Content Styling */
-        .t-code { 
-            font-size: clamp(2rem, 6vw, 2.5rem); 
-            font-weight: 800; 
-            line-height: 1; 
-        }
+        .t-code { font-size: clamp(2rem, 6vw, 2.5rem); font-weight: 800; line-height: 1; }
+        .t-city { font-size: clamp(0.7rem, 2vw, 0.8rem); color: #666; text-transform: uppercase; font-weight: 600; }
+        .t-row { display: flex; justify-content: space-between; margin-bottom: clamp(12px, 3vw, 15px); }
+        .t-label { font-size: 0.65rem; color: #888; text-transform: uppercase; display: block; }
+        .t-val { font-size: 0.9rem; font-weight: 700; font-family: var(--font-mono); }
+        .drag-instruction { text-align: center; opacity: 0.5; font-size: 0.8rem; margin-bottom: 20px; }
+
+        /* Step 5: HUD & Map */
+        #map-view { width: 100vw; height: 100vh; background: #000; z-index: 1; position: relative; }
         
-        .t-city { 
-            font-size: clamp(0.7rem, 2vw, 0.8rem); 
-            color: #666; 
-            text-transform: uppercase; 
-            font-weight: 600; 
-        }
-        
-        .t-row { 
-            display: flex; 
-            justify-content: space-between; 
-            margin-bottom: clamp(12px, 3vw, 15px); 
-        }
-        
-        .t-label { 
-            font-size: clamp(0.6rem, 2vw, 0.65rem); 
-            color: #888; 
-            text-transform: uppercase; 
-            display: block; 
-        }
-        
-        .t-val { 
-            font-size: clamp(0.8rem, 2.5vw, 0.9rem); 
-            font-weight: 700; 
-            font-family: var(--font-mono); 
-        }
-
-        /* Drag instruction */
-        .drag-instruction {
-            text-align: center;
-            opacity: 0.5;
-            font-size: clamp(0.75rem, 2vw, 0.8rem);
-            margin-bottom: 20px;
-        }
-
-        /* Back button */
-        .back-button {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 100;
-            transition: all 0.2s;
-        }
-        
-        .back-button:hover {
-            background: rgba(255,255,255,0.2);
-        }
-
-        /* --- Step 4: Full Screen Map & HUD --- */
-        #screen-flight {
-            background: #000;
-            padding: 0;
-        }
-
-        #map-view {
-            width: 100vw;
-            height: 100vh;
-            background: #000;
-            z-index: 1;
-            position: relative;
-        }
-
-        /* Loading Spinner */
         .map-loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #fff;
-            font-size: clamp(0.8rem, 3vw, 0.9rem);
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(0,0,0,0.8);
-            padding: 15px 25px;
-            border-radius: 8px;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #fff; z-index: 100; display: flex; align-items: center; gap: 10px;
+            background: rgba(0,0,0,0.8); padding: 15px 25px; border-radius: 8px;
             border: 1px solid rgba(255,255,255,0.1);
         }
-
         .spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+            width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite;
         }
 
-        /* The HUD Overlay */
         .hud-top {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 95%;
-            max-width: 500px;
-            background: rgba(10, 10, 10, 0.9);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 20px;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 1000;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            width: 95%; max-width: 500px; background: rgba(10, 10, 10, 0.9);
+            backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 20px; padding: 15px 20px; display: flex; justify-content: space-between;
+            align-items: center; z-index: 1000; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
         }
 
-        .hud-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .hud-timer {
-            font-family: var(--font-mono);
-            font-size: clamp(1.8rem, 6vw, 2.2rem);
-            font-weight: 700;
-            color: #fff;
-            line-height: 1;
-        }
-        
-        .hud-timer span { 
-            font-size: clamp(0.8rem, 2.5vw, 0.9rem); 
-            color: #888; 
-            font-weight: 400; 
-        }
-
-        .hud-status {
-            text-align: right;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
+        .hud-timer { font-family: var(--font-mono); font-size: 2.2rem; font-weight: 700; line-height: 1; }
+        .hud-timer span { font-size: 0.9rem; color: #888; font-weight: 400; }
         
         .status-pill {
-            background: rgba(50, 215, 75, 0.2);
-            color: #32d74b;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: clamp(0.7rem, 2vw, 0.8rem);
-            font-weight: 700;
-            display: inline-block;
-            align-self: flex-end;
+            background: rgba(50, 215, 75, 0.2); color: #32d74b; padding: 6px 12px;
+            border-radius: 20px; font-size: 0.8rem; font-weight: 700; display: inline-block;
         }
 
-        .flight-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-top: 5px;
-        }
-        
-        .stat {
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-family: var(--font-mono);
-            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
-            font-weight: 700;
-            color: #fff;
-        }
-        
-        .stat-label {
-            font-size: clamp(0.65rem, 2vw, 0.7rem);
-            color: #aaa;
-            margin-top: 2px;
-        }
+        .flight-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 5px; }
+        .stat { text-align: center; }
+        .stat-value { font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; }
+        .stat-label { font-size: 0.7rem; color: #aaa; }
 
-        /* Bottom Controls Container */
-        .bottom-controls {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-            z-index: 1000;
-        }
-
-        /* Cancel Button */
-        .btn-abort {
-            background: rgba(255, 59, 48, 0.15);
-            color: #ff3b30;
-            border: 1px solid rgba(255, 59, 48, 0.3);
-            padding: 12px 24px;
-            border-radius: var(--radius-pill);
-            font-weight: 600;
-            backdrop-filter: blur(10px);
-            cursor: pointer;
-            transition: 0.2s;
-            font-size: clamp(0.9rem, 3vw, 1rem);
-            white-space: nowrap;
-        }
-        
-        .btn-abort:hover { background: rgba(255, 59, 48, 0.3); }
-
-        /* Follow Button */
-        .btn-follow {
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 12px 24px;
-            border-radius: var(--radius-pill);
-            font-weight: 600;
-            backdrop-filter: blur(10px);
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: clamp(0.9rem, 3vw, 1rem);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-        }
-        
-        .btn-follow:hover {
-            background: rgba(255,255,255,0.2);
-        }
-        
-        .btn-follow.active {
-            background: rgba(50, 215, 75, 0.2);
-            color: #32d74b;
-            border-color: rgba(50, 215, 75, 0.3);
-        }
-
-        /* Map Controls */
-        .map-controls {
-            position: absolute;
-            right: 20px;
-            bottom: 80px;
+        /* New: Weather & Audio Elements in HUD */
+        .hud-extras {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            z-index: 1000;
+            align-items: flex-end;
+            gap: 5px;
         }
         
-        .map-btn {
-            width: 44px;
-            height: 44px;
-            background: rgba(10, 10, 10, 0.9);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 50%;
+        .weather-widget {
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: #ddd;
+            background: rgba(255,255,255,0.1);
+            padding: 4px 10px;
+            border-radius: 12px;
+            margin-bottom: 5px;
+        }
+        .weather-widget i { font-size: 1.1rem; }
+
+        .audio-toggle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.7rem;
+            color: #aaa;
             cursor: pointer;
-            backdrop-filter: blur(10px);
+            padding: 4px 8px;
+            border-radius: 12px;
+            border: 1px solid transparent;
             transition: all 0.2s;
-            color: #fff;
-            font-size: 1.2rem;
         }
-        
-        .map-btn:hover {
-            background: rgba(20, 20, 20, 0.95);
-            transform: scale(1.1);
-        }
-        
-        .map-btn.active {
-            background: rgba(255,255,255,0.2);
-            color: #fff;
-        }
-        
-        .map-btn.disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-        
-        .map-btn.disabled:hover {
-            background: rgba(10, 10, 10, 0.9);
-            transform: none;
+        .audio-toggle:hover { background: rgba(255,255,255,0.05); }
+        .audio-toggle.active { color: #fff; background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+        .audio-toggle i { font-size: 1rem; }
+
+        .bottom-controls {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 10px; z-index: 1000;
         }
 
-        /* Plane Marker */
-        .plane-marker {
-            filter: drop-shadow(0 0 20px rgba(255,255,255,0.8));
-            transition: transform 0.3s all;
-            will-change: transform;
+        .btn-abort {
+            background: rgba(255, 59, 48, 0.15); color: #ff3b30; border: 1px solid rgba(255, 59, 48, 0.3);
+            padding: 12px 24px; border-radius: var(--radius-pill); font-weight: 600;
+            backdrop-filter: blur(10px); cursor: pointer; transition: 0.2s;
         }
+        .btn-abort:hover { background: rgba(255, 59, 48, 0.3); }
 
-        /* Mapbox controls styling */
+        .btn-follow {
+            background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);
+            padding: 12px 24px; border-radius: var(--radius-pill); font-weight: 600;
+            backdrop-filter: blur(10px); cursor: pointer; display: flex; align-items: center; gap: 8px;
+        }
+        .btn-follow.active { background: rgba(50, 215, 75, 0.2); color: #32d74b; border-color: rgba(50, 215, 75, 0.3); }
+
+        .map-controls {
+            position: absolute; right: 20px; bottom: 100px; display: flex; flex-direction: column; gap: 10px; z-index: 1000;
+        }
+        .map-btn {
+            width: 44px; height: 44px; background: rgba(10, 10, 10, 0.9);
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            backdrop-filter: blur(10px); transition: 0.2s; color: #fff; font-size: 1.2rem;
+        }
+        .map-btn:hover:not(.disabled) { background: rgba(20, 20, 20, 0.95); transform: scale(1.1); }
+        .map-btn.active { background: rgba(255,255,255,0.2); }
+        .map-btn.disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+
+        .plane-marker { filter: drop-shadow(0 0 20px rgba(255,255,255,0.8)); transition: transform 0.3s linear; will-change: transform; }
+
+        /* Mapbox Overrides */
         .mapboxgl-ctrl-top-right { top: 100px !important; }
         .mapboxgl-ctrl { filter: invert(1) hue-rotate(180deg) brightness(1.2); }
-        
-        /* Hide default Mapbox controls except zoom */
-        .mapboxgl-ctrl-attrib,
-        .mapboxgl-ctrl-logo {
-            display: none !important;
-        }
+        .mapboxgl-ctrl-attrib, .mapboxgl-ctrl-logo { display: none !important; }
 
-        /* Responsive adjustments */
-        @media (max-height: 700px) {
-            .screen {
-                padding: 15px;
-            }
-            
-            .fuselage {
-                padding: 40px 15px 25px 15px;
-            }
-            
-            .seat {
-                height: 35px;
-            }
-            
-            .ticket-wrapper {
-                transform: scale(0.9);
-            }
-            
-            .hud-top {
-                top: 15px;
-                padding: 12px 16px;
-            }
-            
-            .bottom-controls {
-                bottom: 15px;
-            }
-        }
+        @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        @media (max-width: 350px) {
-            .scenario-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .pill {
-                padding: 12px;
-            }
-            
-            .path-option {
-                padding: 14px;
-            }
-            
-            .ticket-wrapper {
-                transform: scale(0.85);
-            }
-            
-            .bottom-controls {
-                flex-direction: column;
-                width: 90%;
-                align-items: center;
-            }
+        @media (max-width: 380px) {
+            .scenario-grid { grid-template-columns: repeat(2, 1fr); }
+            .ticket-wrapper { transform: scale(0.9); }
+            .bottom-controls { flex-direction: column; width: 90%; align-items: center; bottom: 20px; }
+            .map-controls { bottom: 140px; }
         }
-
-        @keyframes pulse { 
-            0% { opacity: 0.5; } 
-            50% { opacity: 1; } 
-            100% { opacity: 0.5; } 
-        }
-        
-        @keyframes spin { 
-            0% { transform: rotate(0deg); } 
-            100% { transform: rotate(360deg); } 
-        }
-
     </style>
 </head>
 <body>
 
-<div id="app-frame">
+    <div id="app-frame">
 
-    <div id="screen-scenario" class="screen active">
-        <div class="center-content">
-            <div class="content-wrapper">
-                <div class="scrollable-content">
-                    <h1>Focus Goal</h1>
-                    <p class="subtitle">What are we achieving today?</p>
+        <main id="screen-scenario" class="screen active">
+            <div class="passport-header-btn">
+                <div class="btn-icon-only" onclick="navTo('screen-passport'); loadPassport();" aria-label="Open Passport">
+                    <i class="ph ph-passport"></i>
+                </div>
+            </div>
+            <div class="center-content">
+                <div class="content-wrapper">
+                    <div class="scrollable-content">
+                        <h1>Focus Goal</h1>
+                        <p class="subtitle">What are we achieving today?</p>
 
-                    <div class="scenario-grid">
-                        <div class="pill selected" onclick="selectScenario(this, 'Deep Work')">
-                            <i class="ph ph-briefcase"></i>
-                            <span>Deep Work</span>
-                        </div>
-                        <div class="pill" onclick="selectScenario(this, 'Learning')">
-                            <i class="ph ph-student"></i>
-                            <span>Learning</span>
-                        </div>
-                        <div class="pill" onclick="selectScenario(this, 'Creative')">
-                            <i class="ph ph-paint-brush"></i>
-                            <span>Creative</span>
-                        </div>
-                        <div class="pill" onclick="selectScenario(this, 'Reading')">
-                            <i class="ph ph-book-open"></i>
-                            <span>Reading</span>
-                        </div>
-                        <div class="pill" onclick="selectScenario(this, 'Coding')">
-                            <i class="ph ph-code"></i>
-                            <span>Coding</span>
-                        </div>
-                        <div class="pill" onclick="selectScenario(this, 'Writing')">
-                            <i class="ph ph-pencil-simple"></i>
-                            <span>Writing</span>
-                        </div>
-                        <div class="pill" onclick="selectScenario(this, 'Research')">
-                            <i class="ph ph-magnifying-glass"></i>
-                            <span>Research</span>
-                        </div>
-                        <div class="pill" onclick="selectScenario(this, 'Planning')">
-                            <i class="ph ph-calendar"></i>
-                            <span>Planning</span>
-                        </div>
-                        <div class="pill" onclick="selectScenario(this, 'Design')">
-                            <i class="ph ph-palette"></i>
-                            <span>Design</span>
-                        </div>
-                        <div class="pill" onclick="selectScenario(this, 'Meditation')">
-                            <i class="ph ph-brain"></i>
-                            <span>Meditation</span>
+                        <div class="scenario-grid" role="group" aria-label="Focus Scenarios">
+                            <div class="pill selected" role="button" tabindex="0" onclick="selectScenario(this, 'Deep Work')">
+                                <i class="ph ph-briefcase"></i><span>Deep Work</span>
+                            </div>
+                            <div class="pill" role="button" tabindex="0" onclick="selectScenario(this, 'Learning')">
+                                <i class="ph ph-student"></i><span>Learning</span>
+                            </div>
+                            <div class="pill" role="button" tabindex="0" onclick="selectScenario(this, 'Creative')">
+                                <i class="ph ph-paint-brush"></i><span>Creative</span>
+                            </div>
+                            <div class="pill" role="button" tabindex="0" onclick="selectScenario(this, 'Reading')">
+                                <i class="ph ph-book-open"></i><span>Reading</span>
+                            </div>
+                            <div class="pill" role="button" tabindex="0" onclick="selectScenario(this, 'Coding')">
+                                <i class="ph ph-code"></i><span>Coding</span>
+                            </div>
+                            <div class="pill" role="button" tabindex="0" onclick="selectScenario(this, 'Writing')">
+                                <i class="ph ph-pencil-simple"></i><span>Writing</span>
+                            </div>
+                            <div class="pill" role="button" tabindex="0" onclick="selectScenario(this, 'Research')">
+                                <i class="ph ph-magnifying-glass"></i><span>Research</span>
+                            </div>
+                            <div class="pill" role="button" tabindex="0" onclick="selectScenario(this, 'Planning')">
+                                <i class="ph ph-calendar"></i><span>Planning</span>
+                            </div>
                         </div>
                     </div>
                 </div>
+                <button class="btn-primary" onclick="navTo('screen-path')">Choose Flight Path</button>
             </div>
-            
-            <button class="btn-primary" onclick="navTo('screen-path')">Choose Flight Path</button>
-        </div>
-    </div>
+        </main>
 
-    <div id="screen-path" class="screen path-screen">
-        <div class="center-content">
-            <div class="back-button" onclick="navTo('screen-scenario')">
-                <i class="ph ph-arrow-left"></i>
+        <section id="screen-passport" class="screen">
+            <div class="center-content">
+                <div class="back-button" role="button" aria-label="Go Back" tabindex="0" onclick="navTo('screen-scenario')">
+                    <i class="ph ph-arrow-left"></i>
+                </div>
+                <div class="content-wrapper">
+                    <h1>Passport</h1>
+                    <p class="subtitle">Your Journey Log</p>
+                    <div class="scrollable-content">
+                        <div class="passport-grid" id="passport-grid">
+                            </div>
+                    </div>
+                </div>
             </div>
-            <div class="content-wrapper">
-                <h1>Flight Path</h1>
+        </section>
+
+        <section id="screen-path" class="screen">
+            <div class="center-content">
+                <div class="back-button" role="button" aria-label="Go Back" tabindex="0" onclick="navTo('screen-scenario')">
+                    <i class="ph ph-arrow-left"></i>
+                </div>
+                <div class="content-wrapper">
+                    <h1>Flight Path</h1>
                     <p class="subtitle">Choose your journey & duration</p>
-                <div class="scrollable-content">
-                    <div class="path-grid" id="path-grid">
-                        <!-- Path options will be generated here -->
-                    </div>
+                    <div class="scrollable-content">
+                        <div class="path-grid" id="path-grid"></div>
 
-                    <div class="duration-card">
-                        <div class="duration-header">
-                            <div class="duration-label">Flight Duration</div>
-                            <div class="duration-value" id="duration-display">25:00</div>
-                        </div>
-                        <input type="range" class="duration-slider" min="5" max="120" step="5" value="25" oninput="updateDuration(this.value)">
-                        
-                        <div class="duration-presets">
-                            <div class="duration-preset active" onclick="setDuration(15)">15 min</div>
-                            <div class="duration-preset" onclick="setDuration(25)">25 min</div>
-                            <div class="duration-preset" onclick="setDuration(45)">45 min</div>
-                            <div class="duration-preset" onclick="setDuration(60)">60 min</div>
-                            <div class="duration-preset" onclick="setDuration(90)">90 min</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <button class="btn-primary" onclick="navTo('screen-seats')">Select Seat</button>
-        </div>
-    </div>
-
-    <div id="screen-seats" class="screen">
-        <div class="center-content">
-            <div class="back-button" onclick="navTo('screen-path')">
-                <i class="ph ph-arrow-left"></i>
-            </div>
-            <div class="content-wrapper">
-                <div class="scrollable-content">
-                    <h1>Pick Your Seat</h1>
-                    <p class="subtitle">Front for focus, back for chill.</p>
-
-                    <div class="fuselage">
-                        <div class="cockpit-windows">
-                            <div class="window"></div><div class="window"></div>
-                        </div>
-                        
-                        <div style="height: 30px;"></div>
-
-                        <div class="seat-grid" id="seat-map">
-                            <!-- Seats will be generated here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <button class="btn-primary" onclick="generateTicket()">Confirm Seat</button>
-        </div>
-    </div>
-
-    <div id="screen-ticket" class="screen">
-        <div class="center-content">
-            <div class="back-button" onclick="navTo('screen-seats')">
-                <i class="ph ph-arrow-left"></i>
-            </div>
-            <div class="content-wrapper">
-                <div class="scrollable-content">
-                    <h1>Boarding Pass</h1>
-                    <p class="subtitle">Tear the stub to take off.</p>
-
-                    <div class="ticket-wrapper">
-                        <div class="ticket-main">
-                            <div class="t-row" style="align-items: flex-end;">
-                                <div>
-                                    <span class="t-code" id="t-origin">LHR</span>
-                                    <div class="t-city" id="t-origin-city">London</div>
-                                </div>
-                                <i class="ph-fill ph-airplane-tilt" style="font-size: 24px; color: #ccc; margin-bottom: 5px;"></i>
-                                <div style="text-align: right;">
-                                    <span class="t-code" id="t-dest">CDG</span>
-                                    <div class="t-city" id="t-dest-city">Paris</div>
-                                </div>
+                        <div class="duration-card">
+                            <div class="duration-header">
+                                <div class="duration-label">Flight Duration</div>
+                                <div class="duration-value" id="duration-display">25:00</div>
                             </div>
-                            <div style="border-bottom: 1px dashed #ddd; margin: 20px 0;"></div>
-                            <div class="t-row">
-                                <div>
-                                    <span class="t-label">Passenger</span>
-                                    <span class="t-val">You</span>
-                                </div>
-                                <div style="text-align: right;">
-                                    <span class="t-label">Seat</span>
-                                    <span class="t-val" id="t-seat-val">2A</span>
-                                </div>
-                            </div>
-                            <div class="t-row" style="margin-bottom: 0;">
-                                <div>
-                                    <span class="t-label">Class</span>
-                                    <span class="t-val" id="t-class">Focus</span>
-                                </div>
-                                <div style="text-align: right;">
-                                    <span class="t-label">Time</span>
-                                    <span class="t-val" id="t-time-val">25m</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="ticket-stub" id="ticket-stub">
-                            <span class="t-code" style="font-size: 1.5rem;" id="t-stub-origin">LHR</span>
-                            <i class="ph-fill ph-arrow-down" style="margin: 10px 0; color: #ccc;"></i>
-                            <span class="t-code" style="font-size: 1.5rem;" id="t-stub-dest">CDG</span>
-                            <div style="margin-top: auto;">
-                                <i class="ph-bold ph-barcode" style="font-size: 32px;"></i>
+                            <input type="range" class="duration-slider" aria-label="Duration Slider" min="5" max="120" step="5" value="25" oninput="updateDuration(this.value)">
+                            
+                            <div class="duration-presets">
+                                <div class="duration-preset active" role="button" onclick="setDuration(15)">15 min</div>
+                                <div class="duration-preset" role="button" onclick="setDuration(25)">25 min</div>
+                                <div class="duration-preset" role="button" onclick="setDuration(45)">45 min</div>
+                                <div class="duration-preset" role="button" onclick="setDuration(60)">60 min</div>
+                                <div class="duration-preset" role="button" onclick="setDuration(90)">90 min</div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <button class="btn-primary" onclick="navTo('screen-seats')">Select Seat</button>
+            </div>
+        </section>
+
+        <section id="screen-seats" class="screen">
+            <div class="center-content">
+                <div class="back-button" role="button" aria-label="Go Back" onclick="navTo('screen-path')">
+                    <i class="ph ph-arrow-left"></i>
+                </div>
+                <div class="content-wrapper">
+                    <div class="scrollable-content">
+                        <h1>Pick Your Seat</h1>
+                        <p class="subtitle">Front for focus, back for chill.</p>
+
+                        <div class="fuselage">
+                            <div class="cockpit-windows">
+                                <div class="window"></div><div class="window"></div>
+                            </div>
+                            <div class="seat-grid" id="seat-map"></div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="generateTicket()">Confirm Seat</button>
+            </div>
+        </section>
+
+        <section id="screen-ticket" class="screen">
+            <div class="center-content">
+                <div class="back-button" role="button" aria-label="Go Back" onclick="navTo('screen-seats')">
+                    <i class="ph ph-arrow-left"></i>
+                </div>
+                <div class="content-wrapper">
+                    <div class="scrollable-content">
+                        <h1>Boarding Pass</h1>
+                        <p class="subtitle">Tear the stub to take off.</p>
+
+                        <div class="ticket-wrapper">
+                            <div class="ticket-main">
+                                <div class="t-row" style="align-items: flex-end;">
+                                    <div>
+                                        <div class="t-code" id="t-origin">LHR</div>
+                                        <div class="t-city" id="t-origin-city">London</div>
+                                    </div>
+                                    <i class="ph-fill ph-airplane-tilt" style="font-size: 24px; color: #ccc; margin-bottom: 5px;"></i>
+                                    <div style="text-align: right;">
+                                        <div class="t-code" id="t-dest">CDG</div>
+                                        <div class="t-city" id="t-dest-city">Paris</div>
+                                    </div>
+                                </div>
+                                <div style="border-bottom: 1px dashed #ddd; margin: 20px 0;"></div>
+                                <div class="t-row">
+                                    <div><span class="t-label">Passenger</span><span class="t-val">You</span></div>
+                                    <div style="text-align: right;"><span class="t-label">Seat</span><span class="t-val" id="t-seat-val">2A</span></div>
+                                </div>
+                                <div class="t-row" style="margin-bottom: 0;">
+                                    <div><span class="t-label">Class</span><span class="t-val" id="t-class">Deep Work</span></div>
+                                    <div style="text-align: right;"><span class="t-label">Time</span><span class="t-val" id="t-time-val">25m</span></div>
+                                </div>
+                            </div>
+
+                            <div class="ticket-stub" id="ticket-stub" role="slider" aria-label="Slide to start">
+                                <div class="t-code" style="font-size: 1.5rem;" id="t-stub-origin">LHR</div>
+                                <i class="ph-fill ph-arrow-down" style="margin: 10px 0; color: #ccc;"></i>
+                                <div class="t-code" style="font-size: 1.5rem;" id="t-stub-dest">CDG</div>
+                                <div style="margin-top: auto;">
+                                    <i class="ph-bold ph-barcode" style="font-size: 32px;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <p class="drag-instruction"><i class="ph-fill ph-hand-pointing"></i> Drag stub right to start</p>
+                    <button class="btn-secondary" onclick="navTo('screen-seats')">Back</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-flight" class="screen">
+            <div id="map-view">
+                <div class="map-loading" id="map-loading">
+                    <div class="spinner"></div>
+                    <span>Initializing navigation...</span>
+                </div>
             </div>
 
-            <div>
-                <p class="drag-instruction">
-                    <i class="ph-fill ph-hand-pointing"></i> Drag stub right to start
-                </p>
-                <button class="btn-secondary" onclick="navTo('screen-seats')">Back</button>
+            <div class="hud-top">
+                <div class="hud-info">
+                    <div class="hud-timer" id="flight-timer">25:00</div>
+                    <div class="flight-stats">
+                        <div class="stat"><div class="stat-value" id="stat-speed">840</div><div class="stat-label">KM/H</div></div>
+                        <div class="stat"><div class="stat-value" id="stat-altitude">35,000</div><div class="stat-label">FEET</div></div>
+                        <div class="stat"><div class="stat-value" id="stat-distance">0</div><div class="stat-label">KM</div></div>
+                    </div>
+                </div>
+                <div class="hud-extras">
+                    <div class="hud-status">
+                        <div class="status-pill" id="flight-status">ON COURSE</div>
+                        <div style="font-size: 0.75rem; color: #aaa; text-align: right; margin-top: 8px;" id="flight-info">ETA: 25:00</div>
+                    </div>
+                   
+                    <div class="weather-widget" id="weather-widget" style="display: none;">
+                        <i class="ph ph-sun" id="weather-icon"></i> <span id="weather-temp">--°</span>
+                    </div>
+                    <div class="audio-toggle" id="btn-audio" onclick="toggleAudio()">
+                        <i class="ph ph-speaker-simple-high"></i> <span>Cabin</span>
+                    </div>
+                </div>
             </div>
-        </div>
+
+            <div class="map-controls">
+                <div class="map-btn" aria-label="Zoom In" onclick="zoomMap('in')"><i class="ph ph-plus"></i></div>
+                <div class="map-btn" aria-label="Zoom Out" onclick="zoomMap('out')"><i class="ph ph-minus"></i></div>
+                <div class="map-btn" aria-label="Rotate Left" onclick="rotateMap('left')"><i class="ph ph-arrow-counter-clockwise"></i></div>
+                <div class="map-btn" aria-label="Rotate Right" onclick="rotateMap('right')"><i class="ph ph-arrow-clockwise"></i></div>
+                <div class="map-btn" aria-label="Toggle 3D" id="btn-3d" onclick="toggle3DView()"><i class="ph ph-cube"></i></div>
+            </div>
+
+            <div class="bottom-controls">
+                <button class="btn-follow active" id="btn-follow" onclick="toggleFollowPlane()">
+                    <i class="ph ph-target"></i> Following
+                </button>
+                <button class="btn-abort" onclick="abortFlight()">Abort Flight</button>
+            </div>
+        </section>
+
     </div>
 
-    <div id="screen-flight" class="screen">
-        <div id="map-view">
-            <div class="map-loading" id="map-loading">
-                <div class="spinner"></div>
-                Loading flight map...
-            </div>
-        </div>
+    <script>
+        // CONFIG
+        const CONFIG = {
+            // !!! REPLACE WITH YOUR TOKEN !!!
+            mapboxToken: 'pk.eyJ1IjoicGFya2VyYWRhbXMiLCJhIjoiY2t2bzFtcjJtMDlxczJ2a2dzbm16cDkybSJ9.jVv2Btkawt6rrSJtAKx0EQ',
+            mapStyle: 'mapbox://styles/mapbox/dark-v11',
+            mapboxVersion: 'v2.15.0'
+        };
 
-        <div class="hud-top">
-            <div class="hud-info">
-                <div class="hud-timer" id="flight-timer">25:00</div>
-                <div class="flight-stats" id="flight-stats">
-                    <div class="stat">
-                        <div class="stat-value" id="stat-speed">840</div>
-                        <div class="stat-label">KM/H</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value" id="stat-altitude">35,000</div>
-                        <div class="stat-label">FEET</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value" id="stat-distance">0</div>
-                        <div class="stat-label">KM</div>
-                    </div>
-                </div>
-            </div>
-            <div class="hud-status">
-                <div class="status-pill" id="flight-status">ON COURSE</div>
-                <div style="font-size: 0.75rem; color: #aaa;" id="flight-info">ETA: 25:00</div>
-            </div>
-        </div>
-
-        <div class="map-controls">
-            <div class="map-btn" id="btn-zoom-in" onclick="zoomMap('in')">
-                <i class="ph ph-plus"></i>
-            </div>
-            <div class="map-btn" id="btn-zoom-out" onclick="zoomMap('out')">
-                <i class="ph ph-minus"></i>
-            </div>
-            <div class="map-btn" id="btn-rotate-left" onclick="rotateMap('left')">
-                <i class="ph ph-arrow-counter-clockwise"></i>
-            </div>
-            <div class="map-btn" id="btn-rotate-right" onclick="rotateMap('right')">
-                <i class="ph ph-arrow-clockwise"></i>
-            </div>
-            <div class="map-btn" id="btn-3d" onclick="toggle3DView()">
-                <i class="ph ph-cube"></i>
-            </div>
-        </div>
-
-        <div class="bottom-controls">
-            <button class="btn-follow" id="btn-follow" onclick="toggleFollowPlane()">
-                <i class="ph ph-target"></i> Follow Plane
-            </button>
-
-            <button class="btn-abort" onclick="abortFlight()">Abort Flight</button>
-        </div>
-    </div>
-
-</div>
-
-<script>
-    // --- Replace with your Mapbox token ---
-    mapboxgl.accessToken = 'pk.eyJ1IjoicGFya2VyYWRhbXMiLCJhIjoiY2t2bzFtcjJtMDlxczJ2a2dzbm16cDkybSJ9.jVv2Btkawt6rrSJtAKx0EQ';
-    // Note: This is a demo token. Replace with your own Mapbox token for production use.
-    
-    // --- Flight Path Options ---
-    const flightPaths = [
-        {
-            id: 'europe',
-            origin: { code: 'LHR', lat: 51.4700, lng: -0.4543, name: 'London Heathrow' },
-            dest: { code: 'CDG', lat: 49.0097, lng: 2.5479, name: 'Paris Charles de Gaulle' },
-            distance: 344,
-            defaultDuration: 25,
-            color: '#ffffff'
-        },
-        {
-            id: 'usa-east',
-            origin: { code: 'JFK', lat: 40.6413, lng: -73.7781, name: 'New York JFK' },
-            dest: { code: 'MIA', lat: 25.7959, lng: -80.2871, name: 'Miami International' },
-            distance: 1762,
-            defaultDuration: 45,
-            color: '#4cd964'
-        },
-        {
-            id: 'usa-west',
-            origin: { code: 'LAX', lat: 33.9416, lng: -118.4085, name: 'Los Angeles' },
-            dest: { code: 'SFO', lat: 37.6213, lng: -122.3790, name: 'San Francisco' },
-            distance: 559,
-            defaultDuration: 30,
-            color: '#5ac8fa'
-        },
-        {
-            id: 'asia',
-            origin: { code: 'HND', lat: 35.5494, lng: 139.7798, name: 'Tokyo Haneda' },
-            dest: { code: 'ICN', lat: 37.4602, lng: 126.4407, name: 'Seoul Incheon' },
-            distance: 1157,
-            defaultDuration: 60,
-            color: '#ff9500'
-        },
-        {
-            id: 'long-haul',
-            origin: { code: 'SYD', lat: -33.9461, lng: 151.1772, name: 'Sydney' },
-            dest: { code: 'DXB', lat: 25.2532, lng: 55.3657, name: 'Dubai' },
-            distance: 12041,
-            defaultDuration: 90,
-            color: '#ff2d55'
-        }
-    ];
-
-    // --- Data & Config ---
-    const appState = {
-        scenario: 'Deep Work',
-        duration: 25,
-        seat: '2A',
-        path: flightPaths[0]
-    };
-
-    let map, planeMarker;
-    let flightInterval;
-    let flightProgress = 0;
-    let flightStartTime = 0;
-    let flightDurationMs = 0;
-    let is3DView = true;
-    let isFollowingPlane = true;
-    let userInteraction = false;
-    let currentZoom = 4;
-    let currentPitch = 60;
-    let currentBearing = 0;
-    let lastPlanePosition = null;
-    let followAnimationId = null;
-
-    // --- Initialization ---
-    document.addEventListener('DOMContentLoaded', () => {
-        renderSeats();
-        renderPathOptions();
-        setupDragInteraction();
-        
-        setDurationPresetActive(25);
-        
-        window.addEventListener('resize', handleResize);
-        handleResize();
-    });
-
-    function handleResize() {
-        if (map) {
-            setTimeout(() => {
-                map.resize();
-            }, 100);
-        }
-    }
-
-    // --- Navigation ---
-    function navTo(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        
-        if (id === 'screen-scenario') {
-            document.querySelectorAll('.back-button').forEach(btn => btn.style.display = 'none');
-        } else {
-            document.querySelectorAll('.back-button').forEach(btn => btn.style.display = 'flex');
-        }
-    }
-
-    function selectScenario(el, name) {
-        document.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
-        el.classList.add('selected');
-        appState.scenario = name;
-        document.getElementById('t-class').innerText = name;
-    }
-
-    // --- Duration Management ---
-    function updateDuration(val) {
-        appState.duration = parseInt(val);
-        document.getElementById('duration-display').innerText = `${val}:00`;
-        document.getElementById('t-time-val').innerText = `${val}m`;
-        setDurationPresetActive(appState.duration);
-    }
-
-    function setDuration(minutes) {
-        appState.duration = minutes;
-        document.getElementById('duration-display').innerText = `${minutes}:00`;
-        document.getElementById('t-time-val').innerText = `${minutes}m`;
-        
-        const slider = document.querySelector('.duration-slider');
-        slider.value = minutes;
-        setDurationPresetActive(minutes);
-    }
-
-    function setDurationPresetActive(minutes) {
-        document.querySelectorAll('.duration-preset').forEach(preset => {
-            const presetMinutes = parseInt(preset.textContent);
-            if (presetMinutes === minutes) {
-                preset.classList.add('active');
-            } else {
-                preset.classList.remove('active');
-            }
-        });
-    }
-
-    // --- Path Selection ---
-    function renderPathOptions() {
-        const grid = document.getElementById('path-grid');
-        grid.innerHTML = '';
-        
-        flightPaths.forEach((path, index) => {
-            const option = document.createElement('div');
-            option.className = `path-option ${index === 0 ? 'selected' : ''}`;
-            option.onclick = () => selectPath(option, path);
-            
-            const flightTime = Math.round(path.distance / 800 * 60);
-            
-            option.innerHTML = `
-                <div class="path-header">
-                    <div class="path-codes">${path.origin.code} → ${path.dest.code}</div>
-                    <div class="path-distance">${path.distance.toLocaleString()} km</div>
-                </div>
-                <div class="path-names">
-                    <div>${path.origin.name}</div>
-                    <div>${path.dest.name}</div>
-                </div>
-                <div class="path-duration">Flight time: ~${flightTime} min</div>
-            `;
-            
-            if (index === 0) {
-                option.style.borderColor = path.color;
-            }
-            
-            grid.appendChild(option);
-        });
-    }
-
-    function selectPath(el, path) {
-        document.querySelectorAll('.path-option').forEach(p => {
-            p.classList.remove('selected');
-            p.style.borderColor = '';
-        });
-        
-        el.classList.add('selected');
-        el.style.borderColor = path.color;
-        appState.path = path;
-        
-        setDuration(path.defaultDuration);
-        
-        document.getElementById('t-origin').textContent = path.origin.code;
-        document.getElementById('t-origin-city').textContent = path.origin.name.split(' ')[0];
-        document.getElementById('t-dest').textContent = path.dest.code;
-        document.getElementById('t-dest-city').textContent = path.dest.name.split(' ')[0];
-        document.getElementById('t-stub-origin').textContent = path.origin.code;
-        document.getElementById('t-stub-dest').textContent = path.dest.code;
-    }
-
-    // --- Seat Selection Logic ---
-    function renderSeats() {
-        const grid = document.getElementById('seat-map');
-        const rows = 5;
-        const cols = ['A', 'B', 'aisle', 'C', 'D'];
-
-        for(let r=1; r<=rows; r++) {
-            cols.forEach(c => {
-                if(c === 'aisle') {
-                    const aisle = document.createElement('div');
-                    aisle.className = 'aisle-label';
-                    aisle.innerText = r;
-                    grid.appendChild(aisle);
-                } else {
-                    const seat = document.createElement('div');
-                    seat.className = 'seat';
-                    const seatId = `${r}${c}`;
-                    seat.onclick = () => pickSeat(seat, seatId);
-                    
-                    if(Math.random() > 0.8 && seatId !== '2A') {
-                        seat.classList.add('taken');
-                    }
-                    if(seatId === '2A') seat.classList.add('selected');
-                    
-                    grid.appendChild(seat);
-                }
-            });
-        }
-    }
-
-    function pickSeat(el, id) {
-        if(el.classList.contains('taken')) return;
-        document.querySelectorAll('.seat').forEach(s => s.classList.remove('selected'));
-        el.classList.add('selected');
-        appState.seat = id;
-    }
-
-    function generateTicket() {
-        document.getElementById('t-seat-val').innerText = appState.seat;
-        navTo('screen-ticket');
-    }
-
-    // --- Ticket Drag Logic ---
-    function setupDragInteraction() {
-        const stub = document.getElementById('ticket-stub');
-        let startX = 0;
-
-        interact(stub).draggable({
-            listeners: {
-                start(event) {
-                    startX = 0;
-                    stub.style.transition = 'none';
-                },
-                move(event) {
-                    startX += event.dx;
-                    const xMove = Math.max(0, startX);
-                    const rotate = xMove * 0.1; 
-                    
-                    stub.style.transform = `translate(${xMove}px, ${xMove*0.2}px) rotate(${rotate}deg)`;
-                },
-                end(event) {
-                    if (startX > 120) {
-                        stub.style.transition = 'all 0.5s ease';
-                        stub.style.transform = `translate(300px, 50px) rotate(45deg)`;
-                        stub.style.opacity = '0';
-                        
-                        setTimeout(() => {
-                            launchFlight();
-                        }, 400);
-                    } else {
-                        stub.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                        stub.style.transform = 'translate(0, 0) rotate(0deg)';
-                    }
-                }
-            }
-        });
-    }
-
-    // --- Flight & Mapbox Logic ---
-    function launchFlight() {
-        navTo('screen-flight');
-        
-        setTimeout(() => {
-            initMapbox();
-        }, 100);
-    }
-
-    function initMapbox() {
-        const loadingEl = document.getElementById('map-loading');
-        
-        if (map) {
-            map.remove();
-            map = null;
-        }
-
-        // Clear any existing animation frame
-        if (followAnimationId) {
-            cancelAnimationFrame(followAnimationId);
-            followAnimationId = null;
-        }
-
-        map = new mapboxgl.Map({
-            container: 'map-view',
-            style: 'mapbox://styles/mapbox/dark-v11',
-            center: [appState.path.origin.lng, appState.path.origin.lat],
-            zoom: 10,
-            interactive: true,
-            attributionControl: false,
-            pitch: 60,
-            bearing: 0
-        });
-
-        map.on('load', () => {
-            loadingEl.style.display = 'none';
-            
-            drawFlightPath();
-            createPlaneMarker();
-            startFlightSimulation();
-            updateFollowButton();
-            
-            setupInteractionTracking();
-            
-            // Store initial camera settings
-            currentZoom = map.getZoom();
-            currentPitch = map.getPitch();
-            currentBearing = map.getBearing();
-            
-            // Initialize map controls state
-            updateMapControlsState();
-        });
-
-        map.on('zoom', () => {
-            if (!userInteraction) return;
-            currentZoom = map.getZoom();
-        });
-
-        map.on('pitch', () => {
-            const pitch = map.getPitch();
-            const btn3D = document.getElementById('btn-3d');
-            if (pitch > 0 && !is3DView) {
-                is3DView = true;
-                currentPitch = pitch;
-                btn3D.classList.add('active');
-            } else if (pitch === 0 && is3DView) {
-                is3DView = false;
-                currentPitch = 0;
-                btn3D.classList.remove('active');
-            }
-        });
-
-        map.on('rotate', () => {
-            if (!userInteraction) return;
-            currentBearing = map.getBearing();
-        });
-
-        map.on('error', (e) => {
-            console.error('Mapbox error:', e);
-            loadingEl.innerHTML = 'Map loading failed.';
-        });
-    }
-
-    function setupInteractionTracking() {
-        // Track all user interactions with the map
-        const interactionEvents = ['mousedown', 'touchstart', 'wheel', 'dragstart', 'movestart'];
-        
-        interactionEvents.forEach(event => {
-            map.on(event, () => {
-                userInteraction = true;
-            });
-        });
-        
-        // Also track button interactions that might affect the map
-        document.querySelectorAll('.map-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                userInteraction = true;
-            });
-        });
-        
-        // Reset interaction flag after a short delay
-        map.on('moveend', () => {
-            setTimeout(() => {
-                userInteraction = false;
-            }, 100);
-        });
-    }
-
-    function drawFlightPath() {
-        const coordinates = [
-            [appState.path.origin.lng, appState.path.origin.lat],
-            [appState.path.dest.lng, appState.path.dest.lat]
+        const FLIGHT_PATHS = [
+            { id: 'europe', origin: { code: 'LHR', lat: 51.4700, lng: -0.4543, name: 'London Heathrow' }, dest: { code: 'CDG', lat: 49.0097, lng: 2.5479, name: 'Paris CDG' }, distance: 344, defaultDuration: 25, color: '#ffffff' },
+            { id: 'usa-east', origin: { code: 'JFK', lat: 40.6413, lng: -73.7781, name: 'New York JFK' }, dest: { code: 'MIA', lat: 25.7959, lng: -80.2871, name: 'Miami Intl' }, distance: 1762, defaultDuration: 45, color: '#4cd964' },
+            { id: 'usa-west', origin: { code: 'LAX', lat: 33.9416, lng: -118.4085, name: 'Los Angeles' }, dest: { code: 'SFO', lat: 37.6213, lng: -122.3790, name: 'San Francisco' }, distance: 559, defaultDuration: 30, color: '#5ac8fa' },
+            { id: 'asia', origin: { code: 'HND', lat: 35.5494, lng: 139.7798, name: 'Tokyo Haneda' }, dest: { code: 'ICN', lat: 37.4602, lng: 126.4407, name: 'Seoul Incheon' }, distance: 1157, defaultDuration: 60, color: '#ff9500' },
+            { id: 'long-haul', origin: { code: 'SYD', lat: -33.9461, lng: 151.1772, name: 'Sydney' }, dest: { code: 'DXB', lat: 25.2532, lng: 55.3657, name: 'Dubai' }, distance: 12041, defaultDuration: 90, color: '#ff2d55' }
         ];
 
-        // Remove existing layers if they exist
-        if (map.getLayer('flight-path')) {
-            map.removeLayer('flight-path');
-        }
-        if (map.getSource('flight-path')) {
-            map.removeSource('flight-path');
-        }
-        if (map.getLayer('flight-path-glow')) {
-            map.removeLayer('flight-path-glow');
-        }
+        // STATE
+        const appState = {
+            scenario: 'Deep Work',
+            duration: 25,
+            seat: '2A',
+            path: FLIGHT_PATHS[0],
+            flight: {
+                interval: null,
+                animationId: null,
+                startTime: 0,
+                durationMs: 0,
+                isFollowing: true,
+                is3D: true,
+                lastPos: null,
+                weatherInterval: null
+            },
+            map: null,
+            marker: null,
+            audioEnabled: false
+        };
 
-        map.addSource('flight-path', {
-            'type': 'geojson',
-            'data': {
-                'type': 'Feature',
-                'properties': {},
-                'geometry': {
-                    'type': 'LineString',
-                    'coordinates': coordinates
+        // --- SOUND ENGINE (Synthesized, no external files needed) ---
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.noiseNode = null;
+                this.gainNode = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
                 }
             }
-        });
 
-        map.addLayer({
-            'id': 'flight-path',
-            'type': 'line',
-            'source': 'flight-path',
-            'layout': {
-                'line-join': 'round',
-                'line-cap': 'round'
-            },
-            'paint': {
-                'line-color': appState.path.color,
-                'line-width': 3,
-                'line-dasharray': [2, 2]
+            toggleCabinNoise(enable) {
+                if (!this.ctx) this.init();
+                if (enable) {
+                    if (this.ctx.state === 'suspended') this.ctx.resume();
+                    
+                    // Create Brown Noise for Engine Hum
+                    const bufferSize = this.ctx.sampleRate * 2;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    let lastOut = 0;
+                    for (let i = 0; i < bufferSize; i++) {
+                        const white = Math.random() * 2 - 1;
+                        data[i] = (lastOut + (0.02 * white)) / 1.02;
+                        lastOut = data[i];
+                        data[i] *= 3.5; 
+                    }
+                    
+                    this.noiseNode = this.ctx.createBufferSource();
+                    this.noiseNode.buffer = buffer;
+                    this.noiseNode.loop = true;
+                    this.gainNode = this.ctx.createGain();
+                    this.gainNode.gain.value = 0.05; // Low volume
+                    
+                    // Lowpass filter to muffle it
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 400;
+
+                    this.noiseNode.connect(filter);
+                    filter.connect(this.gainNode);
+                    this.gainNode.connect(this.ctx.destination);
+                    this.noiseNode.start();
+                } else {
+                    if (this.noiseNode) {
+                        this.noiseNode.stop();
+                        this.noiseNode = null;
+                    }
+                }
             }
-        });
 
-        map.addLayer({
-            'id': 'flight-path-glow',
-            'type': 'line',
-            'source': 'flight-path',
-            'layout': {
-                'line-join': 'round',
-                'line-cap': 'round'
-            },
-            'paint': {
-                'line-color': appState.path.color,
-                'line-width': 10,
-                'line-blur': 5,
-                'line-opacity': 0.2
+            playLandingChime() {
+                if (!this.ctx) this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.5);
+                
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 1.5);
+                
+                osc.start();
+                osc.stop(this.ctx.currentTime + 1.5);
             }
-        });
-    }
-
-    function createPlaneMarker() {
-        // Remove existing marker if any
-        if (planeMarker) {
-            planeMarker.remove();
-            planeMarker = null;
         }
         
-        // Create marker element
-        const el = document.createElement('div');
-        el.className = 'plane-marker';
-        el.innerHTML = `
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="${appState.path.color}">
-                <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
-            </svg>
-        `;
-        
-        // Create marker
-        planeMarker = new mapboxgl.Marker({
-            element: el,
-            anchor: 'center'
-        })
-        .setLngLat([appState.path.origin.lng, appState.path.origin.lat])
-        .addTo(map);
-    }
+        const audioSys = new SoundEngine();
 
-    function startFlightSimulation() {
-        flightStartTime = Date.now();
-        flightDurationMs = appState.duration * 60 * 1000;
-        flightProgress = 0;
-        
-        const timerEl = document.getElementById('flight-timer');
-        
-        // Clear any existing interval
-        clearInterval(flightInterval);
-        
-        // Start the flight simulation
-        flightInterval = setInterval(() => {
-            const now = Date.now();
-            const elapsed = now - flightStartTime;
-            flightProgress = Math.min(elapsed / flightDurationMs, 1);
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSeats();
+            renderPathOptions();
+            setupDragInteraction();
+            setDurationPresetActive(25);
+            window.addEventListener('resize', handleResize);
+        });
+
+        // --- CORE NAVIGATION ---
+        function navTo(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const target = document.getElementById(id);
+            if (target) {
+                target.classList.add('active');
+                // Ensure map resizes if entering map screen
+                if (id === 'screen-flight' && appState.map) {
+                    setTimeout(() => appState.map.resize(), 100);
+                }
+            }
+        }
+
+        // --- SCENARIO & CONFIG ---
+        function selectScenario(el, name) {
+            document.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
+            el.classList.add('selected');
+            appState.scenario = name;
+            document.getElementById('t-class').innerText = name;
+        }
+
+        function updateDuration(val) {
+            appState.duration = parseInt(val);
+            updateDurationDisplay(appState.duration);
+        }
+
+        function setDuration(minutes) {
+            appState.duration = minutes;
+            document.querySelector('.duration-slider').value = minutes;
+            updateDurationDisplay(minutes);
+        }
+
+        function updateDurationDisplay(minutes) {
+            document.getElementById('duration-display').innerText = `${minutes}:00`;
+            document.getElementById('t-time-val').innerText = `${minutes}m`;
+            setDurationPresetActive(minutes);
+        }
+
+        function setDurationPresetActive(minutes) {
+            document.querySelectorAll('.duration-preset').forEach(p => {
+                p.classList.toggle('active', parseInt(p.textContent) === minutes);
+            });
+        }
+
+        // --- PASSPORT / HISTORY ---
+        function saveFlightToHistory() {
+            const flightData = {
+                date: new Date().toISOString(),
+                origin: appState.path.origin.code,
+                dest: appState.path.dest.code,
+                duration: appState.duration,
+                scenario: appState.scenario
+            };
             
-            // Update timer
-            const remainingSeconds = Math.max(0, Math.floor((flightDurationMs - elapsed) / 1000));
-            const minutes = Math.floor(remainingSeconds / 60);
-            const seconds = remainingSeconds % 60;
-            timerEl.innerHTML = `${minutes}:${seconds < 10 ? '0' : ''}${seconds} <span>MIN</span>`;
+            let history = JSON.parse(localStorage.getItem('flightpal_history') || '[]');
+            history.unshift(flightData);
+            localStorage.setItem('flightpal_history', JSON.stringify(history));
+        }
+
+        function loadPassport() {
+            const grid = document.getElementById('passport-grid');
+            const history = JSON.parse(localStorage.getItem('flightpal_history') || '[]');
             
-            // Update flight info
-            updateFlightInfo(flightProgress);
-            
-            if (flightProgress >= 1) {
-                completeFlight();
+            if (history.length === 0) {
+                grid.innerHTML = '<div class="empty-state">No flights yet.<br>Complete a session to get your first stamp.</div>';
                 return;
             }
-            
-            // Move the plane
-            movePlane(flightProgress);
-            
-        }, 50); // Update every 50ms for smooth animation
-    }
 
-    function movePlane(progress) {
-        if (!planeMarker || !map) return;
-        
-        const origin = appState.path.origin;
-        const dest = appState.path.dest;
-        
-        // Calculate current position along the path
-        const currentLng = origin.lng + (dest.lng - origin.lng) * progress;
-        const currentLat = origin.lat + (dest.lat - origin.lat) * progress;
-        
-        // Update plane position
-        planeMarker.setLngLat([currentLng, currentLat]);
-        lastPlanePosition = [currentLng, currentLat];
-        
-        // Calculate bearing for plane rotation
-        const bearing = calculateBearing(origin.lng, origin.lat, dest.lng, dest.lat);
-        
-        // Rotate the plane
-        const markerEl = planeMarker.getElement();
-        if (markerEl) {
-            markerEl.style.transform = `rotate(${bearing}deg)`;
+            grid.innerHTML = history.map(h => {
+                const date = new Date(h.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                return `
+                    <div class="stamp-card">
+                        <div class="stamp-date">${date}</div>
+                        <div class="stamp-route">${h.origin} <i class="ph-fill ph-airplane-tilt"></i> ${h.dest}</div>
+                        <div class="stamp-scenario">${h.scenario}</div>
+                        <i class="ph ph-stamp stamp-icon"></i>
+                    </div>
+                `;
+            }).join('');
         }
-        
-        // Smooth camera following
-        if (isFollowingPlane && !userInteraction) {
-            smoothFollowPlane([currentLng, currentLat], bearing);
-        }
-    }
 
-    function smoothFollowPlane(planePos, planeBearing) {
-        if (!map || !planePos) return;
-        
-        // Calculate optimal zoom based on altitude/speed simulation
-        const baseZoom = is3DView ? 5 : 4;
-        const targetZoom = currentZoom;
-        
-        // Calculate target bearing (slightly ahead of plane)
-        const targetBearing = planeBearing;
-        
-        // Smooth interpolation for camera movement
-        const currentCenter = map.getCenter();
-        const targetCenter = planePos;
-        
-        // Calculate distance to target
-        const dx = targetCenter[0] - currentCenter.lng;
-        const dy = targetCenter[1] - currentCenter.lat;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        // Only move camera if we're significantly off center
-        if (distance > 0.001 || Math.abs(map.getBearing() - targetBearing) > 1) {
-            // Smooth interpolation factor based on distance
-            const lerpFactor = Math.min(0.1, distance * 2);
-            
-            // Interpolate position
-            const newLng = currentCenter.lng + dx * lerpFactor;
-            const newLat = currentCenter.lat + dy * lerpFactor;
-            
-            // Interpolate bearing
-            const currentBearing = map.getBearing();
-            const bearingDiff = ((targetBearing - currentBearing + 540) % 360) - 180;
-            const newBearing = currentBearing + bearingDiff * lerpFactor;
-            
-            // Apply smooth camera update
-            map.jumpTo({
-                center: [newLng, newLat],
-                zoom: targetZoom,
-                bearing: newBearing,
-                pitch: currentPitch
+        // --- PATHS & SEATS ---
+        function renderPathOptions() {
+            const grid = document.getElementById('path-grid');
+            grid.innerHTML = FLIGHT_PATHS.map((path, idx) => `
+                <div class="path-option ${idx === 0 ? 'selected' : ''}" 
+                     style="${idx === 0 ? 'border-color:' + path.color : ''}"
+                     onclick='selectPath(this, ${JSON.stringify(path)})' role="button" tabindex="0">
+                    <div class="path-header">
+                        <div class="path-codes">${path.origin.code} → ${path.dest.code}</div>
+                        <div class="path-distance">${path.distance.toLocaleString()} km</div>
+                    </div>
+                    <div class="path-names">
+                        <div>${path.origin.name}</div>
+                        <div>${path.dest.name}</div>
+                    </div>
+                    <div class="path-duration">Flight time: ~${Math.round(path.distance / 800 * 60)} min</div>
+                </div>
+            `).join('');
+        }
+
+        function selectPath(el, path) {
+            document.querySelectorAll('.path-option').forEach(p => {
+                p.classList.remove('selected');
+                p.style.borderColor = '';
             });
+            el.classList.add('selected');
+            el.style.borderColor = path.color;
+            appState.path = FLIGHT_PATHS.find(p => p.id === path.id);
+
+            setDuration(appState.path.defaultDuration);
             
-            // Request next animation frame
-            if (followAnimationId) {
-                cancelAnimationFrame(followAnimationId);
+            // Update Ticket Info
+            document.getElementById('t-origin').textContent = path.origin.code;
+            document.getElementById('t-origin-city').textContent = path.origin.name.split(' ')[0];
+            document.getElementById('t-dest').textContent = path.dest.code;
+            document.getElementById('t-dest-city').textContent = path.dest.name.split(' ')[0];
+            document.getElementById('t-stub-origin').textContent = path.origin.code;
+            document.getElementById('t-stub-dest').textContent = path.dest.code;
+        }
+
+        function renderSeats() {
+            const grid = document.getElementById('seat-map');
+            const rows = 5;
+            const cols = ['A', 'B', 'aisle', 'C', 'D'];
+            grid.innerHTML = '';
+
+            for(let r=1; r<=rows; r++) {
+                cols.forEach(c => {
+                    if(c === 'aisle') {
+                        const div = document.createElement('div');
+                        div.className = 'aisle-label';
+                        div.innerText = r;
+                        grid.appendChild(div);
+                    } else {
+                        const seat = document.createElement('div');
+                        seat.className = 'seat';
+                        const id = `${r}${c}`;
+                        seat.onclick = () => pickSeat(seat, id);
+                        if(Math.random() > 0.8 && id !== '2A') seat.classList.add('taken');
+                        if(id === '2A') seat.classList.add('selected');
+                        grid.appendChild(seat);
+                    }
+                });
             }
-            followAnimationId = requestAnimationFrame(() => {
-                smoothFollowPlane(planePos, planeBearing);
+        }
+
+        function pickSeat(el, id) {
+            if(el.classList.contains('taken')) return;
+            document.querySelectorAll('.seat').forEach(s => s.classList.remove('selected'));
+            el.classList.add('selected');
+            appState.seat = id;
+        }
+
+        function generateTicket() {
+            document.getElementById('t-seat-val').innerText = appState.seat;
+            navTo('screen-ticket');
+        }
+
+        // --- INTERACTION & DRAG ---
+        function setupDragInteraction() {
+            const stub = document.getElementById('ticket-stub');
+            let startX = 0;
+
+            interact(stub).draggable({
+                listeners: {
+                    start: () => { startX = 0; stub.style.transition = 'none'; },
+                    move: (event) => {
+                        startX += event.dx;
+                        const xMove = Math.max(0, startX);
+                        stub.style.transform = `translate(${xMove}px, ${xMove*0.2}px) rotate(${xMove*0.1}deg)`;
+                    },
+                    end: () => {
+                        if (startX > 120) {
+                            stub.style.transition = 'all 0.5s ease';
+                            stub.style.transform = `translate(300px, 50px) rotate(45deg)`;
+                            stub.style.opacity = '0';
+                            setTimeout(launchFlight, 400);
+                        } else {
+                            stub.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                            stub.style.transform = 'translate(0, 0) rotate(0deg)';
+                        }
+                    }
+                }
             });
         }
-    }
 
-    function calculateBearing(lng1, lat1, lng2, lat2) {
-        const dLon = (lng2 - lng1) * Math.PI / 180;
-        const lat1Rad = lat1 * Math.PI / 180;
-        const lat2Rad = lat2 * Math.PI / 180;
-        
-        const y = Math.sin(dLon) * Math.cos(lat2Rad);
-        const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) -
-                  Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
-        
-        let bearing = Math.atan2(y, x) * 180 / Math.PI;
-        bearing = (bearing + 360) % 360;
-        
-        return bearing;
-    }
-
-    function updateFlightInfo(progress) {
-        const speed = Math.round(800 + Math.sin(progress * Math.PI) * 100);
-        const altitude = Math.round(35000 - Math.sin(progress * Math.PI) * 5000);
-        const distanceTraveled = Math.round(appState.path.distance * progress);
-        
-        document.getElementById('stat-speed').textContent = speed;
-        document.getElementById('stat-altitude').textContent = altitude.toLocaleString();
-        document.getElementById('stat-distance').textContent = distanceTraveled.toLocaleString();
-        
-        const statusEl = document.getElementById('flight-status');
-        const infoEl = document.getElementById('flight-info');
-        
-        if (progress > 0.95) {
-            statusEl.textContent = 'LANDING';
-            statusEl.style.background = 'rgba(255, 149, 0, 0.3)';
-            statusEl.style.color = '#ff9500';
-            infoEl.textContent = `ETA: 00:${Math.round((1 - progress) * appState.duration * 60)}`;
-        } else if (progress > 0.7) {
-            statusEl.textContent = 'DESCENDING';
-            statusEl.style.background = 'rgba(255, 149, 0, 0.2)';
-            statusEl.style.color = '#ff9500';
-            infoEl.textContent = `ETA: ${Math.round((1 - progress) * appState.duration)}:00`;
-        } else if (progress > 0.4) {
-            statusEl.textContent = 'CRUISING';
-            statusEl.style.background = 'rgba(50, 215, 75, 0.2)';
-            statusEl.style.color = '#32d74b';
-            const distanceRemaining = appState.path.distance - distanceTraveled;
-            infoEl.textContent = `${distanceRemaining.toLocaleString()} km to go`;
-        } else if (progress > 0.1) {
-            statusEl.textContent = 'CLIMBING';
-            statusEl.style.background = 'rgba(0, 122, 255, 0.2)';
-            statusEl.style.color = '#007aff';
-            infoEl.textContent = `Altitude: ${altitude.toLocaleString()} ft`;
-        } else {
-            statusEl.textContent = 'TAKEOFF';
-            statusEl.style.background = 'rgba(88, 86, 214, 0.2)';
-            statusEl.style.color = '#5856d6';
-            infoEl.textContent = `Speed: ${speed} km/h`;
+        // --- AUDIO TOGGLE ---
+        function toggleAudio() {
+            appState.audioEnabled = !appState.audioEnabled;
+            const btn = document.getElementById('btn-audio');
+            
+            if (appState.audioEnabled) {
+                btn.classList.add('active');
+                audioSys.toggleCabinNoise(true);
+            } else {
+                btn.classList.remove('active');
+                audioSys.toggleCabinNoise(false);
+            }
         }
-    }
 
-    // --- Map Controls ---
-    function updateMapControlsState() {
-        const mapButtons = document.querySelectorAll('.map-btn:not(#btn-3d)');
-        const btn3D = document.getElementById('btn-3d');
-        
-        if (isFollowingPlane) {
-            // Disable all map control buttons except 3D toggle
-            mapButtons.forEach(btn => {
-                btn.classList.add('disabled');
+        // --- REAL-TIME WEATHER (Simulated coords) ---
+        async function fetchWeather(lat, lng) {
+            try {
+                // Free API, no key needed
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true`);
+                const data = await res.json();
+                
+                const w = data.current_weather;
+                const widget = document.getElementById('weather-widget');
+                const icon = document.getElementById('weather-icon');
+                const temp = document.getElementById('weather-temp');
+                
+                widget.style.display = 'flex';
+                temp.innerText = `${Math.round(w.temperature)}°`;
+                
+                // Simple WMO code mapping
+                let iconClass = 'ph-sun';
+                if (w.weathercode > 2 && w.weathercode < 50) iconClass = 'ph-cloud';
+                if (w.weathercode >= 50 && w.weathercode < 80) iconClass = 'ph-cloud-rain';
+                if (w.weathercode >= 80) iconClass = 'ph-cloud-lightning';
+                
+                icon.className = `ph ${iconClass}`;
+            } catch (e) {
+                console.log('Weather fetch failed, likely offline or rate limited');
+            }
+        }
+
+        // --- FLIGHT LOGIC & MAPBOX ---
+        function launchFlight() {
+            navTo('screen-flight');
+            loadMapboxResources().then(initMapbox).catch(err => {
+                document.getElementById('map-loading').innerHTML = 'Failed to load map resources.';
+                console.error(err);
             });
-            
-            // 3D button is still enabled but with reduced opacity
-            btn3D.style.opacity = '0.3';
-  
-            
-        } else {
-            // Enable all map control buttons
-            mapButtons.forEach(btn => {
-                btn.classList.remove('disabled');
+            // Auto-start audio if previously enabled, or init audio context on user gesture (the drag)
+            if(appState.audioEnabled) audioSys.toggleCabinNoise(true);
+        }
+
+        // Lazy load Mapbox to save initial bandwidth
+        function loadMapboxResources() {
+            return new Promise((resolve, reject) => {
+                if (window.mapboxgl) return resolve();
+
+                const cssLink = document.createElement('link');
+                cssLink.href = `https://api.mapbox.com/mapbox-gl-js/${CONFIG.mapboxVersion}/mapbox-gl.css`;
+                cssLink.rel = 'stylesheet';
+                document.head.appendChild(cssLink);
+
+                const script = document.createElement('script');
+                script.src = `https://api.mapbox.com/mapbox-gl-js/${CONFIG.mapboxVersion}/mapbox-gl.js`;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.body.appendChild(script);
             });
+        }
+
+        function initMapbox() {
+            mapboxgl.accessToken = CONFIG.mapboxToken;
             
-            // Reset 3D button opacity
-            btn3D.style.opacity = '1';
+            // Clean up previous instance
+            if (appState.map) appState.map.remove();
+
+            appState.map = new mapboxgl.Map({
+                container: 'map-view',
+                style: CONFIG.mapStyle,
+                center: [appState.path.origin.lng, appState.path.origin.lat],
+                zoom: 10,
+                pitch: 60,
+                bearing: 0,
+                attributionControl: false
+            });
+
+            appState.map.on('load', () => {
+                document.getElementById('map-loading').style.display = 'none';
+                drawFlightPath();
+                createPlaneMarker();
+                startFlightSimulation();
+                setupInteractionListeners();
+            });
+
+            appState.map.on('error', (e) => console.error('Map error:', e));
         }
-    }
 
-    function zoomMap(direction) {
-        if (isFollowingPlane) return; // Prevent zooming when in follow mode
-        
-        userInteraction = true;
-        const currentZoom = map.getZoom();
-        const newZoom = direction === 'in' ? currentZoom + 1 : currentZoom - 1;
-        
-        map.easeTo({
-            zoom: Math.max(1, Math.min(newZoom, 15)),
-            duration: 300
-        });
-        
-        // Update current zoom
-        setTimeout(() => {
-            currentZoom = map.getZoom();
-        }, 350);
-    }
+        function drawFlightPath() {
+            const coords = [
+                [appState.path.origin.lng, appState.path.origin.lat],
+                [appState.path.dest.lng, appState.path.dest.lat]
+            ];
 
-    function rotateMap(direction) {
-        if (isFollowingPlane) return; // Prevent rotating when in follow mode
-        
-        userInteraction = true;
-        const currentBearing = map.getBearing();
-        const newBearing = direction === 'left' ? currentBearing - 45 : currentBearing + 45;
-        
-        map.easeTo({
-            bearing: newBearing,
-            duration: 300
-        });
-        
-        // Update current bearing
-        setTimeout(() => {
-            currentBearing = map.getBearing();
-        }, 350);
-    }
+            const map = appState.map;
+            if(!map) return;
 
-    function toggle3DView() {
-    if (isFollowingPlane) return; // Prevent 3D toggle when in follow mode
-    
-    userInteraction = true;
-    is3DView = !is3DView;
-    const btn3D = document.getElementById('btn-3d');
-    
-    if (is3DView) {
-        btn3D.classList.add('active');
-        currentPitch = 60;
-        map.easeTo({
-            pitch: 60,
-            zoom: Math.max(currentZoom, 5),
-            duration: 800
-        });
-    } else {
-        btn3D.classList.remove('active');
-        currentPitch = 0;
-        map.easeTo({
-            pitch: 0,
-            duration: 800
-        });
-    }
-}
+            if (map.getSource('path')) map.removeSource('path');
+            if (map.getLayer('path-line')) map.removeLayer('path-line');
+            if (map.getLayer('path-glow')) map.removeLayer('path-glow');
 
-    function toggleFollowPlane() {
-        isFollowingPlane = !isFollowingPlane;
-        userInteraction = false; // Reset interaction when enabling follow
-        
-        // Stop any ongoing follow animation
-        if (followAnimationId) {
-            cancelAnimationFrame(followAnimationId);
-            followAnimationId = null;
+            map.addSource('path', {
+                'type': 'geojson',
+                'data': { 'type': 'Feature', 'geometry': { 'type': 'LineString', 'coordinates': coords } }
+            });
+
+            map.addLayer({
+                'id': 'path-glow', 'type': 'line', 'source': 'path',
+                'layout': { 'line-join': 'round', 'line-cap': 'round' },
+                'paint': { 'line-color': appState.path.color, 'line-width': 10, 'line-blur': 5, 'line-opacity': 0.2 }
+            });
+
+            map.addLayer({
+                'id': 'path-line', 'type': 'line', 'source': 'path',
+                'layout': { 'line-join': 'round', 'line-cap': 'round' },
+                'paint': { 'line-color': appState.path.color, 'line-width': 3, 'line-dasharray': [2, 2] }
+            });
         }
-        
-        // If enabling follow and we have a plane position, jump to it
-        if (isFollowingPlane && lastPlanePosition) {
-            const origin = appState.path.origin;
-            const dest = appState.path.dest;
+
+        function createPlaneMarker() {
+            const el = document.createElement('div');
+            el.className = 'plane-marker';
+            el.innerHTML = `<svg width="40" height="40" viewBox="0 0 24 24" fill="${appState.path.color}"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>`;
+            
+            appState.marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
+                .setLngLat([appState.path.origin.lng, appState.path.origin.lat])
+                .addTo(appState.map);
+        }
+
+        function startFlightSimulation() {
+            appState.flight.startTime = Date.now();
+            appState.flight.durationMs = appState.duration * 60 * 1000;
+            
+            clearInterval(appState.flight.interval);
+            clearInterval(appState.flight.weatherInterval);
+            
+            // Initial Weather Check
+            if(appState.flight.lastPos) fetchWeather(appState.flight.lastPos[1], appState.flight.lastPos[0]);
+            
+            // Update Weather every 60s
+            appState.flight.weatherInterval = setInterval(() => {
+                if(appState.flight.lastPos) {
+                    fetchWeather(appState.flight.lastPos[1], appState.flight.lastPos[0]);
+                }
+            }, 60000);
+            
+            appState.flight.interval = setInterval(() => {
+                const elapsed = Date.now() - appState.flight.startTime;
+                const progress = Math.min(elapsed / appState.flight.durationMs, 1);
+                
+                updateTimer(appState.flight.durationMs - elapsed);
+                updateFlightStats(progress);
+                movePlane(progress);
+
+                if (progress >= 1) completeFlight();
+            }, 50);
+        }
+
+        function movePlane(progress) {
+            if (!appState.marker || !appState.map) return;
+            
+            const { origin, dest } = appState.path;
+            const lng = origin.lng + (dest.lng - origin.lng) * progress;
+            const lat = origin.lat + (dest.lat - origin.lat) * progress;
             const bearing = calculateBearing(origin.lng, origin.lat, dest.lng, dest.lat);
+
+            appState.marker.setLngLat([lng, lat]);
+            appState.marker.getElement().style.transform = `rotate(${bearing}deg)`;
+            appState.flight.lastPos = [lng, lat];
+
+            if (appState.flight.isFollowing) {
+                appState.map.jumpTo({
+                    center: [lng, lat],
+                    bearing: bearing,
+                    zoom: appState.map.getZoom(),
+                    pitch: appState.map.getPitch()
+                });
+            }
+        }
+
+        function calculateBearing(lng1, lat1, lng2, lat2) {
+            const dLon = (lng2 - lng1) * Math.PI / 180;
+            const lat1Rad = lat1 * Math.PI / 180;
+            const lat2Rad = lat2 * Math.PI / 180;
+            const y = Math.sin(dLon) * Math.cos(lat2Rad);
+            const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) - Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
+            return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+        }
+
+        function updateTimer(remainingMs) {
+            const totalSec = Math.max(0, Math.floor(remainingMs / 1000));
+            const m = Math.floor(totalSec / 60);
+            const s = totalSec % 60;
+            document.getElementById('flight-timer').innerHTML = `${m}:${s < 10 ? '0' : ''}${s} <span>MIN</span>`;
+        }
+
+        function updateFlightStats(progress) {
+            const speed = Math.round(800 + Math.sin(progress * Math.PI) * 100);
+            const alt = Math.round(35000 - Math.sin(progress * Math.PI) * 5000);
+            const dist = Math.round(appState.path.distance * progress);
             
-            map.flyTo({
-                center: lastPlanePosition,
-                zoom: currentZoom,
-                bearing: bearing,
-                pitch: currentPitch,
-                duration: 800,
-                essential: true
+            document.getElementById('stat-speed').textContent = speed;
+            document.getElementById('stat-altitude').textContent = alt.toLocaleString();
+            document.getElementById('stat-distance').textContent = dist.toLocaleString();
+
+            const status = document.getElementById('flight-status');
+            const info = document.getElementById('flight-info');
+
+            if (progress > 0.98) {
+                setStatus('LANDING', '#ff9500', 'rgba(255, 149, 0, 0.3)');
+                info.textContent = 'Arriving now';
+            } else if (progress > 0.1 && progress < 0.9) {
+                setStatus('CRUISING', '#32d74b', 'rgba(50, 215, 75, 0.2)');
+                info.textContent = `${(appState.path.distance - dist).toLocaleString()} km remaining`;
+            } else {
+                setStatus(progress < 0.5 ? 'CLIMBING' : 'DESCENDING', '#007aff', 'rgba(0, 122, 255, 0.2)');
+                info.textContent = `Alt: ${alt.toLocaleString()} ft`;
+            }
+        }
+
+        function setStatus(text, color, bg) {
+            const el = document.getElementById('flight-status');
+            el.textContent = text;
+            el.style.color = color;
+            el.style.backgroundColor = bg;
+        }
+
+        function setupInteractionListeners() {
+            // Stop following if user interacts with map manually
+            const events = ['mousedown', 'touchstart', 'wheel', 'dragstart'];
+            events.forEach(e => {
+                appState.map.on(e, () => {
+                    if (appState.flight.isFollowing) {
+                        appState.flight.isFollowing = false;
+                        updateFollowBtn();
+                    }
+                });
             });
+        }
+
+        function toggleFollowPlane() {
+            appState.flight.isFollowing = !appState.flight.isFollowing;
+            updateFollowBtn();
+            if (appState.flight.isFollowing && appState.flight.lastPos) {
+                const { origin, dest } = appState.path;
+                const bearing = calculateBearing(origin.lng, origin.lat, dest.lng, dest.lat);
+                appState.map.flyTo({ center: appState.flight.lastPos, bearing: bearing, essential: true });
+            }
+        }
+
+        function updateFollowBtn() {
+            const btn = document.getElementById('btn-follow');
+            btn.classList.toggle('active', appState.flight.isFollowing);
+            btn.innerHTML = appState.flight.isFollowing 
+                ? '<i class="ph ph-target"></i> Following' 
+                : '<i class="ph ph-target"></i> Follow Plane';
             
-            // Update current camera settings
-            setTimeout(() => {
-                currentZoom = map.getZoom();
-                currentBearing = map.getBearing();
-            }, 850);
+            // Toggle map control states
+            document.querySelectorAll('.map-btn:not(#btn-3d)').forEach(b => {
+                b.classList.toggle('disabled', appState.flight.isFollowing);
+            });
         }
-        
-        updateFollowButton();
-        updateMapControlsState();
-    }
 
-    function updateFollowButton() {
-        const btnFollow = document.getElementById('btn-follow');
-        if (isFollowingPlane) {
-            btnFollow.classList.add('active');
-            btnFollow.innerHTML = '<i class="ph ph-target"></i> Following';
-        } else {
-            btnFollow.classList.remove('active');
-            btnFollow.innerHTML = '<i class="ph ph-target"></i> Follow Plane';
+        function toggle3DView() {
+            const btn = document.getElementById('btn-3d');
+            appState.flight.is3D = !appState.flight.is3D;
+            btn.classList.toggle('active', appState.flight.is3D);
+            appState.map.easeTo({ pitch: appState.flight.is3D ? 60 : 0 });
         }
-    }
 
-    function completeFlight() {
-        clearInterval(flightInterval);
-        
-        if (followAnimationId) {
-            cancelAnimationFrame(followAnimationId);
-            followAnimationId = null;
+        function zoomMap(dir) {
+            if (appState.flight.isFollowing) return;
+            const z = appState.map.getZoom();
+            appState.map.easeTo({ zoom: dir === 'in' ? z + 1 : z - 1 });
         }
-        
-        const statusEl = document.getElementById('flight-status');
-        const infoEl = document.getElementById('flight-info');
-        
-        statusEl.textContent = 'ARRIVED';
-        statusEl.style.background = 'rgba(50, 215, 75, 0.3)';
-        statusEl.style.color = '#32d74b';
-        infoEl.textContent = 'Destination reached!';
-        
-        setTimeout(() => {
-            abortFlight();
-        }, 3000);
-    }
 
-    function abortFlight() {
-        clearInterval(flightInterval);
-        
-        if (followAnimationId) {
-            cancelAnimationFrame(followAnimationId);
-            followAnimationId = null;
+        function rotateMap(dir) {
+            if (appState.flight.isFollowing) return;
+            const b = appState.map.getBearing();
+            appState.map.easeTo({ bearing: dir === 'left' ? b - 45 : b + 45 });
         }
-        
-        flightProgress = 0;
-        isFollowingPlane = true;
-        userInteraction = false;
-        
-        if (map) {
-            map.remove();
-            map = null;
-        }
-        
-        if (planeMarker) {
-            planeMarker.remove();
-            planeMarker = null;
-        }
-        
-        const stub = document.getElementById('ticket-stub');
-        stub.style.transform = 'translate(0,0)';
-        stub.style.opacity = '1';
-        stub.style.transition = 'all 0.3s';
-        
-        navTo('screen-scenario');
-    }
 
-</script>
+        function completeFlight() {
+            clearInterval(appState.flight.interval);
+            clearInterval(appState.flight.weatherInterval);
+            
+            setStatus('ARRIVED', '#32d74b', 'rgba(50, 215, 75, 0.3)');
+            
+            // Play Chime
+            if(appState.audioEnabled) audioSys.playLandingChime();
+            
+            // Save to Passport
+            saveFlightToHistory();
+            
+            setTimeout(abortFlight, 3000);
+        }
+
+        function abortFlight() {
+            clearInterval(appState.flight.interval);
+            clearInterval(appState.flight.weatherInterval);
+            
+            // Cut sound
+            audioSys.toggleCabinNoise(false);
+            
+            if (appState.map) {
+                appState.map.remove();
+                appState.map = null;
+            }
+            // Reset Stub
+            const stub = document.getElementById('ticket-stub');
+            stub.style.transform = 'translate(0,0)';
+            stub.style.opacity = '1';
+            
+            appState.flight.isFollowing = true;
+            navTo('screen-scenario');
+        }
+
+        function handleResize() {
+            if (appState.map) appState.map.resize();
+        }
+    </script>
 </body>
 </html>
