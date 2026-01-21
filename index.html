@@ -51,6 +51,7 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             height: 100vh;
+            height: 100dvh;
             width: 100vw;
             overflow: hidden;
             display: flex;
@@ -540,9 +541,16 @@
         .audio-toggle i { font-size: 1rem; }
 
         .bottom-controls {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 10px; z-index: 1000;
-        }
+        position: absolute; 
+        bottom: 30px; 
+        /* ИСПРАВЛЕНИЕ: добавляем отступ безопасной зоны */
+        bottom: calc(30px + env(safe-area-inset-bottom));
+        left: 50%; 
+        transform: translateX(-50%);
+        display: flex; 
+        gap: 10px; 
+        z-index: 1000;
+    }
 
         .btn-abort {
             background: rgba(255, 59, 48, 0.15); color: #ff3b30; border: 1px solid rgba(255, 59, 48, 0.3);
@@ -1286,13 +1294,38 @@
             }, 50);
         }
 
+        // Хелпер: Конвертация широты в Y-координату проекции Меркатора
+        function latToMercator(lat) {
+            return Math.log(Math.tan((lat * Math.PI / 180) / 2 + Math.PI / 4));
+        }
+
+        // Хелпер: Обратная конвертация Y-координаты Меркатора в широту
+        function mercatorToLat(y) {
+            return (2 * Math.atan(Math.exp(y)) - Math.PI / 2) * 180 / Math.PI;
+        }
+
+        // ЗАМЕНА: Исправленная функция движения
         function movePlane(progress) {
             if (!appState.marker || !appState.map) return;
             
             const { origin, dest } = appState.path;
+
+            // 1. Интерполяция Долготы (остается линейной)
             const lng = origin.lng + (dest.lng - origin.lng) * progress;
-            const lat = origin.lat + (dest.lat - origin.lat) * progress;
-            const bearing = calculateBearing(origin.lng, origin.lat, dest.lng, dest.lat);
+
+            // 2. Интерполяция Широты (ИСПРАВЛЕНО: используем проекцию Меркатора)
+            // Мы переводим широту в "плоские" координаты карты, интерполируем там, и возвращаем обратно.
+            // Это гарантирует, что самолет будет лететь строго по прямой линии, нарисованной Mapbox.
+            const startY = latToMercator(origin.lat);
+            const endY = latToMercator(dest.lat);
+            const currentY = startY + (endY - startY) * progress;
+            const lat = mercatorToLat(currentY);
+
+            // 3. Расчет угла (ИСПРАВЛЕНО: Локсодромия / Rhumb Line)
+            // Для прямой линии на карте Меркатора угол должен быть постоянным
+            const dLon = (dest.lng - origin.lng) * Math.PI / 180;
+            const dPhi = Math.log(Math.tan(dest.lat * Math.PI / 360 + Math.PI / 4) / Math.tan(origin.lat * Math.PI / 360 + Math.PI / 4));
+            let bearing = Math.atan2(dLon, dPhi) * 180 / Math.PI;
 
             appState.marker.setLngLat([lng, lat]);
             appState.marker.getElement().style.transform = `rotate(${bearing}deg)`;
@@ -1301,12 +1334,14 @@
             if (appState.flight.isFollowing) {
                 appState.map.jumpTo({
                     center: [lng, lat],
-                    bearing: bearing,
+                    bearing: bearing, // Камера тоже поворачивается по курсу
                     zoom: appState.map.getZoom(),
                     pitch: appState.map.getPitch()
                 });
             }
         }
+
+        
 
         function calculateBearing(lng1, lat1, lng2, lat2) {
             const dLon = (lng2 - lng1) * Math.PI / 180;
